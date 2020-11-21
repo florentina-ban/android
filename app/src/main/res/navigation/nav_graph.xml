@@ -3,11 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/login_fragment">
+
+    <fragment
+        android:id="@+id/login_fragment"
+        android:name="flore.ubb.mob.recipeapp.auth.LoginFragment"
+        android:label="@string/login_fragment_label"
+        tools:layout="@layout/fragment_login">
+
+        <action
+            android:id="@+id/action_login_to_rcipeList"
+            app:destination="@id/FirstFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="flore.ubb.mob.recipeapp.RecipeListFragment"
+        android:name="flore.ubb.mob.recipeapp.listcomp.RecipeListFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_recipe_list">
 
@@ -17,7 +28,7 @@
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="flore.ubb.mob.recipeapp.EditRecipeFragment"
+        android:name="flore.ubb.mob.recipeapp.editcomp.EditRecipeFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_edit_recipe">
 
