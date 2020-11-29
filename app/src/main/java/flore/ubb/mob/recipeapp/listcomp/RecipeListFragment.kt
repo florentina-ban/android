@@ -78,7 +78,7 @@ class RecipeListFragment : Fragment() {
 
             if  (type.equals("removed")) {
                 Log.d("WebSocket: ", "equal")
-                recipesModel.recipeRepository.removeFromList(id)
+                recipesModel.recipeRepository.deleteOne(id)
             }
             if  (type.equals("created")) {
                 Log.d("WebSocket: ", "equal")
@@ -86,7 +86,7 @@ class RecipeListFragment : Fragment() {
             }
             if  (type.equals("updated")) {
                 Log.d("WebSocket: ", "equal")
-                recipesModel.recipeRepository.updateList(recipe);
+                recipesModel.recipeRepository.updateDao(recipe);
             }
             recipeListAdapter.notifyDataSetChanged()
            // runBlocking { WebsocketCreator.eventChannel.send(event) }
@@ -122,7 +122,7 @@ class RecipeListFragment : Fragment() {
         logout_button.setOnClickListener{
             Log.v(TAG, "logout")
             AuthRepository.logout()
-            recipesModel.recipeRepository.clearCash()
+            //recipesModel.recipeRepository.clearCash()
             findNavController().navigate(R.id.login_fragment)
         }
     }
@@ -146,10 +146,11 @@ class RecipeListFragment : Fragment() {
                 Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
             }
         })
-        recipesModel.loadItems()
+        recipesModel.refresh()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.v(TAG, "onDestroy")
     }
 }

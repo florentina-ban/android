@@ -9,10 +9,13 @@ import flore.ubb.mob.recipeapp.data.RecipeRepository
 import flore.ubb.mob.recipeapp.data.local.RecipeDb
 import kotlinx.coroutines.launch
 import java.util.*
+import flore.ubb.mob.recipeapp.core.Result
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class RecipeEditViewModel (application: Application) : AndroidViewModel(application) {
     private val mutableRecipe = MutableLiveData<Recipe>().apply { value = Recipe("", "",
-        0,"","", false, Date() ) }
+      0,"","", false, Date() ) }
     private val mutableFetching = MutableLiveData<Boolean>().apply { value = false }
     private val mutableCompleted = MutableLiveData<Boolean>().apply { value = false }
     private val mutableException = MutableLiveData<Exception>().apply { value = null }
@@ -22,22 +25,24 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
     val fetchingError: LiveData<Exception> = mutableException
     val completed: LiveData<Boolean> = mutableCompleted
 
-    val recipeRepository: RecipeRepository = RecipeRepository
+    val recipeRepository: RecipeRepository
 
-    init{
-        //val recipeDao = RecipeDb.getDatabase(application, viewModelScope).recipeDao()
-        //recipeRepository = RecipeRepository(recipeDao)
-       // recipeRepository = RecipeRepository()
+    init {
+        val recipeDao = RecipeDb.getDatabase(application, viewModelScope).recipeDao()
+        recipeRepository = RecipeRepository(recipeDao)
     }
-
 
     fun loadItem(itemId: String) {
         viewModelScope.launch {
             Log.i(TAG, "loadItem...")
             mutableFetching.value = true
             mutableException.value = null
+
             try {
-                mutableRecipe.value = recipeRepository.load(itemId)
+                val result = withContext(Dispatchers.IO) {
+                   recipeRepository.getById(itemId)
+                }
+                mutableRecipe.value = result
                 Log.i(TAG, "loadItem succeeded")
                 mutableFetching.value = false
             } catch (e: Exception) {
@@ -65,37 +70,60 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
             try {
                 if (recipe._id?.isNotEmpty()!!) {
                     Log.i(TAG,"notempty")
-                    mutableRecipe.value = recipeRepository.update(recipe)
+                    when (val result = recipeRepository.update(recipe)){
+                        is Result.Success -> {
+                            Log.i(TAG,"saveOrUpdateItem succeeded");
+                            mutableRecipe.value = result.data
+                            mutableCompleted.value = true
+                            mutableFetching.value = false
+                        }
+                        is Result.Error -> {
+                            mutableFetching.value = false
+                            // mutableException.value = result.data
+                            Log.w(TAG, "saveOrUpdateItem failed");
+
+                        }
+                    }
                 } else {
                     Log.i(TAG,"empty")
-                    mutableRecipe.value = recipeRepository.save(recipe)
+                    when (val result = recipeRepository.save(recipe)){
+                        is Result.Success -> {
+                            Log.i(TAG,"saveOrUpdateItem succeeded");
+                            mutableRecipe.value = result.data
+                            mutableCompleted.value = true
+                            mutableFetching.value = false
+                        }
+                        is Result.Error -> {
+                            mutableFetching.value = false
+                           // mutableException.value = result.data
+                            Log.w(TAG, "saveOrUpdateItem failed");
+
+                        }
+                    }
                 }
-                Log.i(TAG,"saveOrUpdateItem succeeded");
-                mutableCompleted.value = true
-                mutableFetching.value = false
             } catch (e: Exception) {
                 Log.w(TAG, "saveOrUpdateItem failed"+e.message, e);
+            }
+        }
+    }
+
+    fun removeItem(id: String) {
+        viewModelScope.launch {
+            Log.i(TAG, "removeItem...")
+            mutableFetching.value = true
+            mutableException.value = null
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    recipeRepository.remove(id)
+                }
+                Log.i(TAG, "removeItem succeeded")
+                mutableFetching.value = false
+                mutableCompleted.value = true
+            } catch (e: Exception) {
+                Log.w(TAG, "removeItem failed", e)
                 mutableException.value = e
                 mutableFetching.value = false
             }
         }
     }
-
-    fun removeItem(id: String){
-            viewModelScope.launch {
-                Log.i(TAG, "removeItem...")
-                mutableFetching.value = true
-                mutableException.value = null
-                try {
-                    mutableRecipe.value = recipeRepository.remove(id)
-                    Log.i(TAG, "removeItem succeeded")
-                    mutableFetching.value = false
-                    mutableCompleted.value = true
-                } catch (e: Exception) {
-                    Log.w(TAG, "removeItem failed", e)
-                    mutableException.value = e
-                    mutableFetching.value = false
-                }
-            }
-        }
 }

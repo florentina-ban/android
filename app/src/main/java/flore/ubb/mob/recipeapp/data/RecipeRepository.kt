@@ -1,24 +1,75 @@
 package flore.ubb.mob.recipeapp.data
 
 import android.util.Log
-import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import flore.ubb.mob.recipeapp.MainActivity
-import flore.ubb.mob.recipeapp.TAG
-import flore.ubb.mob.recipeapp.core.Api
-import flore.ubb.mob.recipeapp.core.ConnectionChecker
 import flore.ubb.mob.recipeapp.data.local.RecipeDao
-import flore.ubb.mob.recipeapp.data.local.RecipeDb
 import flore.ubb.mob.recipeapp.data.remote.RecipeApi
-import flore.ubb.mob.recipeapp.listcomp.RecipeListAdapter
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
+import java.lang.Exception
+import flore.ubb.mob.recipeapp.core.Result
+import flore.ubb.mob.recipeapp.core.TAG
 
-//class RecipeRepository (private val recipeDao: RecipeDao) {
-object RecipeRepository  {
+class RecipeRepository (private val recipeDao: RecipeDao) {
+    val recipes = recipeDao.getAll()
+
+    suspend fun refresh(): Result<Boolean> {
+        try {
+            val items = RecipeApi.service.find()
+            for (item in items) {
+                recipeDao.insert(item)
+            }
+            return Result.Success(true)
+        } catch(e: Exception) {
+            return Result.Error(e)
+        }
+    }
+
+    fun getById(itemId: String): Recipe {
+        var a = recipeDao.getById(itemId)
+        return a
+    }
+
+    suspend fun save(item: Recipe): Result<Recipe> {
+        try {
+            val createdItem = RecipeApi.service.create(item)
+            //recipeDao.insert(createdItem)
+            return Result.Success(createdItem)
+        } catch(e: Exception) {
+            return Result.Error(e)
+        }
+    }
+
+    suspend fun remove(id: String): Recipe{
+        Log.i(TAG, "remove")
+        val removedItem = RecipeApi.service.remove(id)
+        //removeFromList(id)
+        return removedItem
+    }
+
+    suspend fun update(item: Recipe): Result<Recipe> {
+        try {
+            val updatedItem = RecipeApi.service.update(item._id, item)
+            //recipeDao.update(updatedItem)
+            return Result.Success(updatedItem)
+        } catch(e: Exception) {
+            return Result.Error(e)
+        }
+    }
+
+    suspend fun updateDao(recipe: Recipe): Result<Recipe>{
+        recipeDao.update(recipe);
+        return Result.Success<Recipe>(recipe)
+    }
+
+    suspend fun addToList(recipe: Recipe){
+        recipeDao.insert(recipe)
+    }
+
+    suspend fun deleteOne(id: String){
+        recipeDao.deleteOne(id)
+    }
+
+
+    /*
+    object RecipeRepository  {
 
     private var cachedItems: MutableList<Recipe>? = null;
 
@@ -94,4 +145,6 @@ object RecipeRepository  {
             cachedItems?.set(index, recipe)
         }
     }
+
+     */
 }

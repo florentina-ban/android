@@ -11,7 +11,7 @@ interface RecipeDao {
     fun getAll(): LiveData<List<Recipe>>
 
     @Query("SELECT * FROM recipes WHERE _id=:id ")
-    fun getById(id: String): LiveData<Recipe>
+    fun getById(id: String): Recipe
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: Recipe)
@@ -22,4 +22,6 @@ interface RecipeDao {
     @Query("DELETE FROM recipes")
     suspend fun deleteAll()
 
+    @Query("DELETE FROM recipes WHERE _id=:id")
+    suspend fun deleteOne(id: String)
 }

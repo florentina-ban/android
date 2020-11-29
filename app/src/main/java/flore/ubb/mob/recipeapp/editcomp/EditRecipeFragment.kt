@@ -119,7 +119,7 @@ class EditRecipeFragment : Fragment() {
             }
         })
         val id = itemId
-        if (id!=null) {
+        if (id!="") {
             viewModel.loadItem(id)
         }
     }
