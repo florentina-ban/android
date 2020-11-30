@@ -1,28 +1,35 @@
 package flore.ubb.mob.recipeapp.editcomp
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import flore.ubb.mob.recipeapp.R
-import flore.ubb.mob.recipeapp.TAG
+import flore.ubb.mob.recipeapp.core.ConnectivityLiveData
+import flore.ubb.mob.recipeapp.core.TAG
+import flore.ubb.mob.recipeapp.data.Recipe
 import kotlinx.android.synthetic.main.fragment_edit_recipe.*
 import kotlinx.android.synthetic.main.fragment_edit_recipe.progress
 import kotlinx.android.synthetic.main.fragment_recipe_list.*
 import java.util.*
 import java.util.Calendar.*
 
-/**
- * A simple [Fragment] subclass as the second destination in the navigation.
- */
 class EditRecipeFragment : Fragment() {
-    companion object {
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var connectivityLiveData: ConnectivityLiveData
+    private lateinit var myContext: Context;
+
+        companion object {
         const val ITEM_ID = "ITEM_ID"
     }
 
@@ -43,19 +50,28 @@ class EditRecipeFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        myContext = inflater.context
         return inflater.inflate(R.layout.fragment_edit_recipe, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.v(TAG, "onViewCreated")
+
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         Log.v(TAG, "onActivityCreated")
         setupViewModel()
+
+        connectivityManager =
+            ContextCompat.getSystemService(myContext, android.net.ConnectivityManager::class.java)!!
+        connectivityLiveData = ConnectivityLiveData(connectivityManager)
+//        connectivityLiveData.observe(viewLifecycleOwner,{
+//            if (it)
+//                viewModel.updateRemoteDatabase()
+//        })
 
         recipe_likes.maxValue = 1000
         recipe_likes.minValue = 0
@@ -73,14 +89,24 @@ class EditRecipeFragment : Fragment() {
                     recipe_origin.text.toString(),
                     recipe_likes.value,
                     recipe_triedIt.isChecked,
-                    mydate
-                    )
+                    mydate)
         }
         button_cancel.setOnClickListener {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
         removeButton.setOnClickListener{
-            var removed = viewModel.removeItem(itemId)
+            val month = recipe_date.month
+            val day = recipe_date.dayOfMonth
+            val year = recipe_date.year
+            var mydate = Date(year, month,day)
+            val currRecipe = Recipe(itemId,
+                recipe_name.text.toString(),
+                recipe_likes.value,
+                recipe_description.text.toString(),
+                recipe_origin.text.toString(),
+                recipe_triedIt.isChecked,
+                mydate, null, null)
+            viewModel.removeItem(currRecipe)
             //findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
     }
@@ -99,7 +125,7 @@ class EditRecipeFragment : Fragment() {
 
         })
         viewModel.fetching.observe(viewLifecycleOwner, { fetching ->
-            Log.v(TAG, "update fetching")
+           // Log.v(TAG, "update fetching")
             progress.visibility = if (fetching) View.VISIBLE else View.GONE
         })
         viewModel.fetchingError.observe(viewLifecycleOwner, { exception ->

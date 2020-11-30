@@ -1,6 +1,7 @@
 package flore.ubb.mob.recipeapp.data
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import flore.ubb.mob.recipeapp.data.local.RecipeDao
 import flore.ubb.mob.recipeapp.data.remote.RecipeApi
 import java.lang.Exception
@@ -8,11 +9,20 @@ import flore.ubb.mob.recipeapp.core.Result
 import flore.ubb.mob.recipeapp.core.TAG
 
 class RecipeRepository (private val recipeDao: RecipeDao) {
-    val recipes = recipeDao.getAll()
+    val recipes = recipeDao.getAllFromLocal()
+
+    fun getCurrentRecipes(): LiveData<List<Recipe>>{
+        return recipes
+    }
+
+    fun getRecipesForWorker(): LiveData<List<Recipe>>{
+        return recipeDao.getAllForWorker()
+    }
 
     suspend fun refresh(): Result<Boolean> {
         try {
             val items = RecipeApi.service.find()
+            recipeDao.deleteAll()
             for (item in items) {
                 recipeDao.insert(item)
             }
@@ -33,15 +43,27 @@ class RecipeRepository (private val recipeDao: RecipeDao) {
             //recipeDao.insert(createdItem)
             return Result.Success(createdItem)
         } catch(e: Exception) {
+            item.database = 1
+            item.timestamp = System.currentTimeMillis()
+            recipeDao.insert(item)
+            Log.v(TAG, "in exception: ")
             return Result.Error(e)
         }
     }
 
-    suspend fun remove(id: String): Recipe{
+    suspend fun remove(recipe: Recipe): Result<Recipe>{
         Log.i(TAG, "remove")
-        val removedItem = RecipeApi.service.remove(id)
-        //removeFromList(id)
-        return removedItem
+        try {
+            val removedItem = RecipeApi.service.remove(recipe._id)
+            //removeFromList(id)
+            return Result.Success(removedItem)
+        }catch (e: Exception){
+            recipe.database = 2
+            recipe.timestamp = System.currentTimeMillis()
+            recipeDao.update(recipe)
+            Log.v(TAG, "in exception: ")
+            return Result.Error(e)
+        }
     }
 
     suspend fun update(item: Recipe): Result<Recipe> {
@@ -50,13 +72,16 @@ class RecipeRepository (private val recipeDao: RecipeDao) {
             //recipeDao.update(updatedItem)
             return Result.Success(updatedItem)
         } catch(e: Exception) {
+            item.database = 1
+            item.timestamp = System.currentTimeMillis()
+            recipeDao.update(item)
+            Log.d(TAG, "in update exception: "+e.toString())
             return Result.Error(e)
         }
     }
 
-    suspend fun updateDao(recipe: Recipe): Result<Recipe>{
-        recipeDao.update(recipe);
-        return Result.Success<Recipe>(recipe)
+    suspend fun updateDao(recipe: Recipe){
+        recipeDao.update(recipe)
     }
 
     suspend fun addToList(recipe: Recipe){

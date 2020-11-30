@@ -7,8 +7,15 @@ import flore.ubb.mob.recipeapp.data.Recipe
 @Dao
 interface RecipeDao {
 
+    @Query("SELECT * from recipes WHERE location!=2 ORDER BY name ASC")
+    fun getAllFromLocal(): LiveData<List<Recipe>>
+
     @Query("SELECT * from recipes ORDER BY name ASC")
     fun getAll(): LiveData<List<Recipe>>
+
+    @Query("SELECT * from recipes WHERE location>0 ORDER BY name ASC")
+    fun getAllForWorker(): LiveData<List<Recipe>>
+
 
     @Query("SELECT * FROM recipes WHERE _id=:id ")
     fun getById(id: String): Recipe

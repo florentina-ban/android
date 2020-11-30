@@ -1,10 +1,8 @@
 package flore.ubb.mob.recipeapp.core
 
 import android.util.Log
-import flore.ubb.mob.recipeapp.TAG
 import okhttp3.Interceptor
 import okhttp3.Response
-
 
 class TokenInterceptor constructor() : Interceptor {
     var token: String? = null

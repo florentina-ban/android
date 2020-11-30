@@ -3,19 +3,19 @@ package flore.ubb.mob.recipeapp.editcomp
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
-import flore.ubb.mob.recipeapp.TAG
 import flore.ubb.mob.recipeapp.data.Recipe
 import flore.ubb.mob.recipeapp.data.RecipeRepository
 import flore.ubb.mob.recipeapp.data.local.RecipeDb
 import kotlinx.coroutines.launch
 import java.util.*
 import flore.ubb.mob.recipeapp.core.Result
+import flore.ubb.mob.recipeapp.core.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class RecipeEditViewModel (application: Application) : AndroidViewModel(application) {
     private val mutableRecipe = MutableLiveData<Recipe>().apply { value = Recipe("", "",
-      0,"","", false, Date() ) }
+      0,"","", false, Date(), null,null) }
     private val mutableFetching = MutableLiveData<Boolean>().apply { value = false }
     private val mutableCompleted = MutableLiveData<Boolean>().apply { value = false }
     private val mutableException = MutableLiveData<Exception>().apply { value = null }
@@ -53,7 +53,8 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun saveOrUpdateItem(id:String, name: String, description: String, origin: String, likes: Int, triedIt: Boolean, date: Date) {
+    fun saveOrUpdateItem(id:String, name: String, description: String, origin: String, likes: Int,
+                         triedIt: Boolean, date: Date) {
         viewModelScope.launch {
             Log.i(TAG, "saveOrUpdateItem...");
             val recipe = mutableRecipe.value ?: return@launch
@@ -68,7 +69,7 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
             mutableException.value = null
             Log.v(TAG, "-------------------------")
             try {
-                if (recipe._id?.isNotEmpty()!!) {
+                if (recipe._id.isNotEmpty()) {
                     Log.i(TAG,"notempty")
                     when (val result = recipeRepository.update(recipe)){
                         is Result.Success -> {
@@ -79,6 +80,7 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
                         }
                         is Result.Error -> {
                             mutableFetching.value = false
+                            mutableCompleted.value = true
                             // mutableException.value = result.data
                             Log.w(TAG, "saveOrUpdateItem failed");
 
@@ -95,6 +97,7 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
                         }
                         is Result.Error -> {
                             mutableFetching.value = false
+                            mutableCompleted.value = true
                            // mutableException.value = result.data
                             Log.w(TAG, "saveOrUpdateItem failed");
 
@@ -107,18 +110,20 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun removeItem(id: String) {
+    fun removeItem(recipe: Recipe) {
         viewModelScope.launch {
             Log.i(TAG, "removeItem...")
             mutableFetching.value = true
             mutableException.value = null
             try {
                 val result = withContext(Dispatchers.IO) {
-                    recipeRepository.remove(id)
+                    recipeRepository.remove(recipe)
                 }
-                Log.i(TAG, "removeItem succeeded")
                 mutableFetching.value = false
                 mutableCompleted.value = true
+                if (result is Result.Error) {
+                    mutableException.value = result.exception
+                }
             } catch (e: Exception) {
                 Log.w(TAG, "removeItem failed", e)
                 mutableException.value = e

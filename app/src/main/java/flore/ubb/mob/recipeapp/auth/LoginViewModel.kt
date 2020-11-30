@@ -7,10 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import flore.ubb.mob.recipeapp.R
-import flore.ubb.mob.recipeapp.TAG
 import flore.ubb.mob.recipeapp.auth.data.AuthRepository
 import flore.ubb.mob.recipeapp.auth.data.TokenHolder
 import flore.ubb.mob.recipeapp.core.Result
+import flore.ubb.mob.recipeapp.core.TAG
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {

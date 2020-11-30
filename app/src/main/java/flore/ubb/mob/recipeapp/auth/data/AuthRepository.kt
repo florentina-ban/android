@@ -4,12 +4,12 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import flore.ubb.mob.recipeapp.MainActivity
 import flore.ubb.mob.recipeapp.R
-import flore.ubb.mob.recipeapp.TAG
 import flore.ubb.mob.recipeapp.auth.data.remote.RemoteAuthDataSource
 import flore.ubb.mob.recipeapp.core.Result;
 import flore.ubb.mob.recipeapp.core.Api
 import flore.ubb.mob.recipeapp.data.remote.RecipeApi
 import android.content.SharedPreferences
+import flore.ubb.mob.recipeapp.core.TAG
 
 object AuthRepository {
     var user: User? = null

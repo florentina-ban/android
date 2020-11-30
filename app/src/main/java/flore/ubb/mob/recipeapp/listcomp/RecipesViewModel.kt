@@ -3,11 +3,11 @@ package flore.ubb.mob.recipeapp.listcomp
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
-import flore.ubb.mob.recipeapp.TAG
 import flore.ubb.mob.recipeapp.data.Recipe
 import flore.ubb.mob.recipeapp.data.RecipeRepository
 import flore.ubb.mob.recipeapp.data.local.RecipeDb
 import flore.ubb.mob.recipeapp.core.Result
+import flore.ubb.mob.recipeapp.core.TAG
 import kotlinx.coroutines.launch
 
 class RecipesViewModel (application: Application) : AndroidViewModel(application) {

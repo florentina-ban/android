@@ -1,28 +1,38 @@
 package flore.ubb.mob.recipeapp.auth
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.EditText
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import flore.ubb.mob.recipeapp.R
-import flore.ubb.mob.recipeapp.auth.data.TokenHolder
+import flore.ubb.mob.recipeapp.core.ConnectivityLiveData
 import kotlinx.android.synthetic.main.fragment_login.*
 import flore.ubb.mob.recipeapp.core.Result;
+import flore.ubb.mob.recipeapp.core.TAG
 
 class LoginFragment : Fragment() {
-
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var connectivityLiveData: ConnectivityLiveData
+    private lateinit var myContext: Context
     private lateinit var viewModel: LoginViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        myContext = inflater.context
         return inflater.inflate(R.layout.fragment_login, container, false)
     }
 
@@ -30,6 +40,12 @@ class LoginFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         setupLoginForm()
+        connectivityManager = ContextCompat.getSystemService(myContext, android.net.ConnectivityManager::class.java)!!
+        connectivityLiveData = ConnectivityLiveData(connectivityManager)
+        connectivityLiveData.observe(viewLifecycleOwner, {
+            Log.d(TAG, "connectivityLiveData $it")
+            view?.findViewById<CheckBox>(R.id.connected_check)?.isChecked=it
+        })
     }
 
     private fun setupLoginForm() {

@@ -14,10 +14,22 @@
         android:indeterminate="true"
         android:visibility="gone" />
 
+    <CheckBox
+        android:id="@+id/connected_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="304dp"
+        android:layout_marginRight="304dp"
+        android:text="connected"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recipe_list"
         android:layout_width="412dp"
         android:layout_height="480dp"
+        android:layout_marginTop="60dp"
         android:background="@color/backgroudLight"
         app:layoutManager="LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"

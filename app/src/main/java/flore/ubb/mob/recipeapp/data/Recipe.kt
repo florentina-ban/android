@@ -1,6 +1,7 @@
 package flore.ubb.mob.recipeapp.data
 
 import androidx.room.*
+import java.sql.Timestamp
 import java.util.*
 
 class MyConverter(){
@@ -39,8 +40,14 @@ data class Recipe(
     @ColumnInfo(name = "date")
     var date: Date,
 
-//    @ColumnInfo(name = "date")
-//    var timestamp: Timestamp =Timestamp(date.getTime())
+   @ColumnInfo(name = "version")
+    var timestamp: Long?,
+
+    // 0, null -> ok;
+    // 1 -> doar local
+    // 2 -> doar local -> removed
+    @ColumnInfo(name = "location")
+    var database: Int?
 
 ) {
     override fun toString(): String {

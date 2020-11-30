@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import flore.ubb.mob.recipeapp.R
-import flore.ubb.mob.recipeapp.TAG
 import flore.ubb.mob.recipeapp.data.Recipe
 import flore.ubb.mob.recipeapp.editcomp.EditRecipeFragment
 import kotlinx.android.synthetic.main.view_recipe.view.*
@@ -39,12 +38,10 @@ class RecipeListAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.view_recipe, parent, false)
-        //Log.v(TAG, "onCreateViewHolder")
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        //Log.v(TAG, "onBindViewHolder $position")
         val recipe = items[position]
         holder.itemView.tag = recipe
         holder.textView.text = recipe.name
