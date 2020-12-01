@@ -29,8 +29,6 @@ import flore.ubb.mob.recipeapp.core.BackgroundWorker
 import flore.ubb.mob.recipeapp.core.ConnectivityLiveData
 import flore.ubb.mob.recipeapp.core.TAG
 import flore.ubb.mob.recipeapp.data.Recipe
-import flore.ubb.mob.recipeapp.data.RecipeRepository
-import flore.ubb.mob.recipeapp.data.remote.RecipeApi
 import flore.ubb.mob.recipeapp.data.remote.WebsocketCreator
 import flore.ubb.mob.recipeapp.editcomp.EditRecipeFragment
 import kotlinx.android.synthetic.main.fragment_recipe_list.*
@@ -60,13 +58,13 @@ class RecipeListFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         isActive = false
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+       //connectivityManager.unregisterNetworkCallback(networkCallback)
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+       //connectivityManager.registerDefaultNetworkCallback(networkCallback)
         isActive = true
 
     }
@@ -122,6 +120,7 @@ class RecipeListFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_recipe_list, container, false)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         Log.v(TAG, "onActivityCreated")
@@ -137,6 +136,12 @@ class RecipeListFragment : Fragment() {
         connectivityLiveData = ConnectivityLiveData(connectivityManager)
         connectivityLiveData.observe(viewLifecycleOwner, {
             view?.findViewById<CheckBox>(R.id.connected_check)?.isChecked = it
+            if (it)
+                if(connectivityManager.allNetworks.size==1) {
+                    recipesModel.refresh()
+                    recipesModel.startAndObserveJob(myContext)
+                    WebsocketCreator.reconnect()
+                }
         })
 
         add_recipe_button.setOnClickListener {
@@ -160,6 +165,9 @@ class RecipeListFragment : Fragment() {
             Log.v(TAG, "update items")
             recipeListAdapter.items = items
         })
+        recipesModel.itemsForWorkerLive.observe(viewLifecycleOwner, {items ->
+            recipesModel.itemsForWorker = items
+        })
         recipesModel.loading.observe(viewLifecycleOwner, { loading ->
             Log.i(TAG, "update loading")
             progress.visibility = if (loading) View.VISIBLE else View.GONE
@@ -179,11 +187,14 @@ class RecipeListFragment : Fragment() {
         Log.v(TAG, "onDestroy")
     }
 
+    /*
     val networkCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     object : ConnectivityManager.NetworkCallback() {
+        private var firstTime = true
         override fun onAvailable(network: Network) {
             Log.d(TAG, "The default network is now: " + network)
 
+            //startAndObserveJob()
         }
 
         override fun onLost(network: Network) {
@@ -204,34 +215,6 @@ class RecipeListFragment : Fragment() {
             Log.d(TAG, "The default network changed link properties: " + linkProperties)
         }
     }
-    @SuppressLint("RestrictedApi")
-    private fun startAndObserveJob() {
-        // setup WorkRequest
-        val work = recipesModel.recipeRepository.getRecipesForWorker()
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-        val inputData = Data.Builder()
-            .put("work",work)
-            .build()
-//        val myWork = PeriodicWorkRequestBuilder<ExampleWorker>(1, TimeUnit.MINUTES)
-        val myWork = OneTimeWorkRequest.Builder(BackgroundWorker::class.java)
-            .setConstraints(constraints)
-            .setInputData(inputData)
-            .build()
-        val workId = myWork.id
-        WorkManager.getInstance(myContext).apply {
-            // enqueue Work
-            enqueue(myWork)
-            // observe work status
-            getWorkInfoByIdLiveData(workId)
-                .observe(viewLifecycleOwner, { status ->
-                    val isFinished = status?.state?.isFinished
-                    Log.d(TAG, "Job $workId; finished: $isFinished")
-                })
-        }
-        //Toast.makeText(this, "Job $workId enqueued", Toast.LENGTH_SHORT).show()
-    }
+     */
 
 }

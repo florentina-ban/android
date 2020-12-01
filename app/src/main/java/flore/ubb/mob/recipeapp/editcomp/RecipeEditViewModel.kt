@@ -25,11 +25,11 @@ class RecipeEditViewModel (application: Application) : AndroidViewModel(applicat
     val fetchingError: LiveData<Exception> = mutableException
     val completed: LiveData<Boolean> = mutableCompleted
 
-    val recipeRepository: RecipeRepository
+    val recipeRepository = RecipeRepository
 
     init {
         val recipeDao = RecipeDb.getDatabase(application, viewModelScope).recipeDao()
-        recipeRepository = RecipeRepository(recipeDao)
+        recipeRepository.setRecipeDao(recipeDao)
     }
 
     fun loadItem(itemId: String) {

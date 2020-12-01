@@ -34,15 +34,22 @@ class Message(token: String){
 object WebsocketCreator {
     val eventChannel = Channel<String>()
     var message: Message?
+    lateinit var webSocket: WebSocket
 
     init {
         message = Api.tokenInterceptor.token?.let { Message(it) }
         val request = Request.Builder().url("ws://192.168.100.2:3000").addHeader(
             "authorization", "Bearer " + Api.tokenInterceptor.token
         ).build()
-        val webSocket = RecipeApi.client.newWebSocket(request, MyWebSocketListener())
+        webSocket = RecipeApi.client.newWebSocket(request, MyWebSocketListener())
     }
 
+    fun reconnect(){
+        val request = Request.Builder().url("ws://192.168.100.2:3000").addHeader(
+            "authorization", "Bearer " + Api.tokenInterceptor.token
+        ).build()
+     webSocket = RecipeApi.client.newWebSocket(request, MyWebSocketListener())
+    }
     private class MyWebSocketListener : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             //Log.d("WebSocket", message.toString()+ " "+ Gson().toJson(message))

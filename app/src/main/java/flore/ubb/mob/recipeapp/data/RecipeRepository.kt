@@ -8,20 +8,47 @@ import java.lang.Exception
 import flore.ubb.mob.recipeapp.core.Result
 import flore.ubb.mob.recipeapp.core.TAG
 
-class RecipeRepository (private val recipeDao: RecipeDao) {
-    val recipes = recipeDao.getAllFromLocal()
+object RecipeRepository{
+
+    private lateinit var recipeDao: RecipeDao
+    lateinit var recipes: LiveData<List<Recipe>>
+    lateinit var recipesLocal: LiveData<List<Recipe>>
+    init {
+        try{
+            recipes = recipeDao.getAll()
+            recipesLocal = recipeDao.getAllForWorker()
+            Log.d(TAG, "recipes_local_size"+recipesLocal.value?.size.toString())
+        }catch (e: Exception){
+            //recipes = recipeDao.getAllFromLocal()
+        }
+    }
+
+    fun setRecipeDao(recipeD: RecipeDao){
+        recipeDao = recipeD
+        try{
+            recipes = recipeDao.getAll()
+            recipesLocal = recipeDao.getAllForWorker()
+            Log.d(TAG, "recipes_local_size"+recipesLocal.value?.size.toString())
+        }catch (e: Exception){
+            //recipes = recipeDao.getAllFromLocal()
+        }
+    }
 
     fun getCurrentRecipes(): LiveData<List<Recipe>>{
         return recipes
     }
 
     fun getRecipesForWorker(): LiveData<List<Recipe>>{
-        return recipeDao.getAllForWorker()
+        val a= recipeDao.getAllForWorker()
+        Log.d(TAG, a.value?.size.toString())
+        return a
     }
 
     suspend fun refresh(): Result<Boolean> {
         try {
-            val items = RecipeApi.service.find()
+            recipesLocal = recipeDao.getAllForWorker()
+            Log.d(TAG, "recipes_local_size"+recipesLocal.value?.size.toString())
+                val items = RecipeApi.service.find()
             recipeDao.deleteAll()
             for (item in items) {
                 recipeDao.insert(item)
@@ -36,43 +63,49 @@ class RecipeRepository (private val recipeDao: RecipeDao) {
         var a = recipeDao.getById(itemId)
         return a
     }
-
+    // 1 -> doar local -> created
     suspend fun save(item: Recipe): Result<Recipe> {
         try {
+            item.database = 0
             val createdItem = RecipeApi.service.create(item)
-            //recipeDao.insert(createdItem)
+            recipeDao.insert(createdItem)
+            recipeDao.deleteOne("")
             return Result.Success(createdItem)
         } catch(e: Exception) {
             item.database = 1
             item.timestamp = System.currentTimeMillis()
             recipeDao.insert(item)
-            Log.v(TAG, "in exception: ")
+            Log.v(TAG, "in exception: database: "+ item.database)
             return Result.Error(e)
         }
     }
 
+    // 3 -> doar Local -> removed
     suspend fun remove(recipe: Recipe): Result<Recipe>{
         Log.i(TAG, "remove")
         try {
+            recipe.database = 0
             val removedItem = RecipeApi.service.remove(recipe._id)
+            recipeDao.deleteOne(recipe._id)
             //removeFromList(id)
             return Result.Success(removedItem)
         }catch (e: Exception){
-            recipe.database = 2
+            recipe.database = 3
             recipe.timestamp = System.currentTimeMillis()
             recipeDao.update(recipe)
             Log.v(TAG, "in exception: ")
             return Result.Error(e)
         }
     }
-
+    // 2 -> doar local -> updated
     suspend fun update(item: Recipe): Result<Recipe> {
         try {
+            item.database = 0
             val updatedItem = RecipeApi.service.update(item._id, item)
-            //recipeDao.update(updatedItem)
-            return Result.Success(updatedItem)
+            recipeDao.update(item)
+            return Result.Success(item)
         } catch(e: Exception) {
-            item.database = 1
+            item.database = 2
             item.timestamp = System.currentTimeMillis()
             recipeDao.update(item)
             Log.d(TAG, "in update exception: "+e.toString())

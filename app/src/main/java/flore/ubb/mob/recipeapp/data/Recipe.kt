@@ -44,8 +44,9 @@ data class Recipe(
     var timestamp: Long?,
 
     // 0, null -> ok;
-    // 1 -> doar local
-    // 2 -> doar local -> removed
+    // 1 -> doar local -> created
+    // 2 -> doar local -> updated
+    // 3 -> doar Local -> removed
     @ColumnInfo(name = "location")
     var database: Int?
 
